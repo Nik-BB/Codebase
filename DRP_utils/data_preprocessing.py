@@ -1,9 +1,12 @@
+'''Reuseable functions for data preprocessing in drug response prediciton 
+
+'''
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import sklearn
-
 
 def keep_overlapping(x1, x2):
     '''Only keeps the cell lines that are in both x1 and x2
