@@ -92,8 +92,6 @@ def run_cv(m_func, x, y, hp, epochs=10, k=10, p=1, benchmark=False,
     return loss, val_loss, val_mae, val_loss_mm, train_val_cls
 
 #plotting funcs
-
-
 def cv_metric(metric, func):
     """Finds func of cv across a number of epochs as outputted from run_cv
     
