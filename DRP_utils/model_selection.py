@@ -1,3 +1,7 @@
+'''Reuseable functions for model selection in drug response prediction.
+
+'''
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
