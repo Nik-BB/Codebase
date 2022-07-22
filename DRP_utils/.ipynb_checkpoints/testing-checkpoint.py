@@ -12,17 +12,17 @@ def sort_results(pre, true, cls_drug_inds, centered):
     
     Inputs
     ------
-    pre: array or list or pd index
+    pre: array or pd index
     models predicted results
     
-    true: array or list or pd index
+    true: array or pd index
     target values
     
-    cls_drug_inds: array or list or pd index
+    cls_drug_inds: array or pd index
     gives the cell line and drug for the true and pre values.
     Indices need to match pre and true. I.e. cls_drug_inds[0] need to give
     the cell line and drug that corrisonds with true[0] and pre[0] (When 
-    inputs are lists)
+    inputs are flat arrays)
     Entires need to be in the format 'cellLine.drug'
     
     centered: Int, 0 or 1
