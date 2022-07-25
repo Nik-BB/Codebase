@@ -8,8 +8,9 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import sklearn
 
+
 def run_cv(m_func, x, y, hp, epochs=10, k=10, p=1, benchmark=False,
-           batch_size=128):
+           batch_size=128, verbos=1):
     '''runs k fold cv p times 
     
     Inputs
@@ -22,7 +23,7 @@ def run_cv(m_func, x, y, hp, epochs=10, k=10, p=1, benchmark=False,
     omic and drug data are pd dataframes. With cell lines in indexes
     and features in cols. 
     
-    y: pd index 
+    y: pd series 
     target values
     
     hp: list
@@ -43,6 +44,9 @@ def run_cv(m_func, x, y, hp, epochs=10, k=10, p=1, benchmark=False,
     batch_size: int
     batch size of keras model
     
+    verbos: int
+    if 1 print out cv status
+    
     Returns
     -------
     loss, val_loss, val_mae, 
@@ -59,7 +63,8 @@ def run_cv(m_func, x, y, hp, epochs=10, k=10, p=1, benchmark=False,
     
     i = 0
     for train_i, val_i in cv.split(x[0]):
-        print(i / (k * p))
+        if verbos == 1:
+            print(i / (k * p))
         train_cls = np.unique(x[0].iloc[train_i].index)
         val_cls = np.unique(x[0].iloc[val_i].index)
         train_val_cls[0].append(train_cls)
@@ -207,3 +212,78 @@ def plot_cv(test, val, epochs, err=2, skip_epochs=0,
     print(best_metric(val))
         
     plt.show()
+
+
+def run_random_hp_opt(param_grid, x, y, num_trails, model_func, epochs,
+                      k=3, p=1, batch_size=128):
+    '''Random search to find optmal hyper parameters
+    
+    Inputs
+    -----
+    param_grid: Sklearn parameter grid
+    grid of hyper parameters (hps) to search over
+    
+    x: List
+    where x[0] gives input omics data and x[1] gives input drug data
+    omic and drug data are pd dataframes. With cell lines in indexes
+    and features in cols. 
+    
+    y: pd series 
+    target values
+    
+    num_trails: Int
+    number of parameters to be randomly sampled
+
+    m_func: Function
+    that returns keras model
+    
+    
+    epochs: int
+    number of epochs to train the model for
+    
+    k: int
+    number of folds to run the cross valdation for
+    
+    p: int
+    number of times to repeats the k fold cross validation 
+    
+    
+    batch_size: int
+    batch size of keras model
+    
+    Returns
+    -------
+    optmisation results: pd dataframe
+    of the search results 
+    
+    '''
+    
+    rng = np.random.default_rng()
+    hp_inds = rng.choice(len(param_grid), size=num_trails, replace=False)
+
+    opt_results = {'Smallest val loss': [], 'SD': [], 'Epoch': [], 'HPs': []}
+    losses, val_losses = [], []
+    for i, ind in enumerate(hp_inds):
+        print(i/num_trails)
+        hps = param_grid[ind]
+        loss, val_loss, *_ = run_cv(model_func,
+                                    x,
+                                    y,
+                                    hps,
+                                    k=k,
+                                    p=p,
+                                    verbos=0,
+                                    epochs=epochs,
+                                    batch_size=batch_size)   
+
+        min_loss, sd, epoch = best_metric(val_loss)
+        opt_results['Smallest val loss'].append(min_loss)
+        opt_results['SD'].append(sd)
+        opt_results['Epoch'].append(epoch)
+        opt_results['HPs'].append(hps)
+
+        #keep if loss plots needed
+        losses.append(loss)
+        val_losses.append(val_loss)
+        
+    return pd.DataFrame(opt_results), losses, val_losses 
