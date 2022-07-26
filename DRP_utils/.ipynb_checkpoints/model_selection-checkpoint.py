@@ -7,6 +7,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import sklearn
+import collections
+
+
 
 
 def run_cv(m_func, x, y, hp, epochs=10, k=10, p=1, benchmark=False,
@@ -120,10 +123,12 @@ def best_metric(metric, rounded=True):
     m = cv_metric(metric, np.mean)
     sd = cv_metric(metric, np.std)
     argmin = np.argmin(m)
+    #make formatting more readable
+    Min_metric = collections.namedtuple('MinMetric', ['mean', 'sd', 'index'])
     if rounded:
-        return m[argmin], np.round(sd[argmin], 3), argmin
+        return Min_metric(m[argmin], np.round(sd[argmin], 3), argmin)
     else:
-        return m[argmin], sd[argmin], argmin
+        return Min_metric(m[argmin], sd[argmin], argmin)
         
 
 def plot_cv(test, val, epochs, err=2, skip_epochs=0,
