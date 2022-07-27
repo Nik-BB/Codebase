@@ -8,16 +8,16 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import sklearn
 
-def keep_overlapping(x1, x2):
-    '''Only keeps the cell lines that are in both x1 and x2
+def keep_overlapping(df1, df2):
+    '''Only keeps the cell lines that are in both df1 and df2
     
     Inputs
     ------
-    x1: pd dataframe
-    has cell lines in the index of the datframe 
+    df1: pd dataframe
+    has cell lines in the index of the datframe with no duplicates
     
-    x2: pd dataframe
-    has cell liens in the index of the dtaframe 
+    df2: pd dataframe
+    has cell liens in the index of the dtaframe with no duplicates
 
     Returns
     -------
@@ -27,6 +27,13 @@ def keep_overlapping(x1, x2):
     x2: pd dataframe
     with only the cell lines that are also in x1
     '''
+    x1 = df1.copy(deep=True)
+    x2 = df2.copy(deep=True)
+    
+    #check for duplicates 
+    assert (x1.index.duplicated() == False).all()
+    assert (x2.index.duplicated() == False).all()
+    
     #cls that are in x1 but not x2 
     drop_x1 = set(x1.index).difference(x2.index)
     x1.drop(index=drop_x1, inplace=True)
@@ -34,9 +41,9 @@ def keep_overlapping(x1, x2):
     #cls that are in x2 but not x1
     drop_x2 = set(x2.index).difference(x1.index)
     x2.drop(index=drop_x2, inplace=True)
-
-    #check the same cell lines are in the same position
-    assert (x1.index == x2.index).all
+    
+    #puts the indices in the same order (only works if all indices are shared)
+    x2 = x2.loc[x1.index]
     
     return x1, x2 
 
