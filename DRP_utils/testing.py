@@ -54,3 +54,33 @@ def sort_results(pre, true, cls_drug_inds, centered):
             sorted_results[key][1].append(true)
             
     return sorted_results
+
+
+def plot_heatmap(trained_model, x, y):
+    '''Plots heatmap for true vs predicted and prints metrics
+    
+    Input
+    ------
+    trained_model: Keras
+    A trained model where trained_model.predict gives the
+    predicitons of the model.
+    
+    x: array 
+    data compatalbe with input to trained_model s.t
+    trained_model(x) gives the prediction for x.
+    
+    y: array
+    target values assocated with x.
+    '''
+    prediction = trained_model.predict(x)
+    prediction.reshape(len(prediction))
+    fig, ax = plt.subplots(figsize=(8, 5))
+    pcm = ax.hist2d(hot_pre, y, bins=75, cmap=plt.cm.jet)
+    fig.colorbar(pcm[3])
+    plt.show()
+    
+    #improve formatting
+    Scores = namedtuple('Testing', ['R2','MSE'])
+    score = Scores(r2_score(prediction, y), 
+                   mean_squared_error(prediction, y))
+    print(score)

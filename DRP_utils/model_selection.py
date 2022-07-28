@@ -64,6 +64,9 @@ def run_cv(m_func, x, y, hp, epochs=10, k=10, p=1, benchmark=False,
     train_val_cls = ([], [])
     #x_pp, x_drug = x
     
+    #check same number of samples
+    assert len(x[0]) == len(x[1]) == len(y)
+    
     i = 0
     for train_i, val_i in cv.split(x[0]):
         if verbos == 1:
