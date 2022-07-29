@@ -1,7 +1,12 @@
-'''Reuseable functions for sorting and plotting the models prediciton for drug response prediction. 
+'''Reuseable functions for sorting and plotting models predicitons. 
 
 '''
-
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import tensorflow as tf
+import sklearn
+import collections
 
 def sort_results(pre, true, cls_drug_inds, centered):
     '''Sorts results so that they are drug and cell lines centered.
@@ -80,7 +85,7 @@ def plot_heatmap(trained_model, x, y):
     plt.show()
     
     #improve formatting
-    Scores = namedtuple('Testing', ['R2','MSE'])
-    score = Scores(r2_score(prediction, y), 
+    Scores = collections.namedtuple('Testing', ['R2','MSE'])
+    score = Scores(r2_score.metrics(prediction, y), 
                    mean_squared_error(prediction, y))
     print(score)
