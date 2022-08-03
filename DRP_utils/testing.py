@@ -78,9 +78,9 @@ def plot_heatmap(trained_model, x, y):
     target values assocated with x.
     '''
     prediction = trained_model.predict(x)
-    prediction.reshape(len(prediction))
+    prediction = prediction.reshape(len(prediction))
     fig, ax = plt.subplots(figsize=(8, 5))
-    pcm = ax.hist2d(hot_pre, y, bins=75, cmap=plt.cm.jet)
+    pcm = ax.hist2d(prediction, y, bins=75, cmap=plt.cm.jet)
     fig.colorbar(pcm[3])
     plt.show()
     
