@@ -1,7 +1,12 @@
-'''Reuseable functions for sorting and plotting the models prediciton for drug response prediction. 
+'''Reuseable functions for sorting and plotting models predicitons. 
 
 '''
-
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import tensorflow as tf
+import sklearn
+import collections
 
 def sort_results(pre, true, cls_drug_inds, centered):
     '''Sorts results so that they are drug and cell lines centered.
@@ -54,3 +59,33 @@ def sort_results(pre, true, cls_drug_inds, centered):
             sorted_results[key][1].append(true)
             
     return sorted_results
+
+
+def plot_heatmap(trained_model, x, y):
+    '''Plots heatmap for true vs predicted and prints metrics
+    
+    Input
+    ------
+    trained_model: Keras
+    A trained model where trained_model.predict gives the
+    predicitons of the model.
+    
+    x: array 
+    data compatalbe with input to trained_model s.t
+    trained_model(x) gives the prediction for x.
+    
+    y: array
+    target values assocated with x.
+    '''
+    prediction = trained_model.predict(x)
+    prediction = prediction.reshape(len(prediction))
+    fig, ax = plt.subplots(figsize=(8, 5))
+    pcm = ax.hist2d(prediction, y, bins=75, cmap=plt.cm.jet)
+    fig.colorbar(pcm[3])
+    plt.show()
+    
+    #improve formatting
+    Scores = collections.namedtuple('Testing', ['R2','MSE'])
+    score = Scores(sklearn.metrics.r2_score(y, prediction),
+                   sklearn.metrics.mean_squared_error(y, prediction))
+    print(score)

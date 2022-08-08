@@ -86,6 +86,6 @@ def plot_heatmap(trained_model, x, y):
     
     #improve formatting
     Scores = collections.namedtuple('Testing', ['R2','MSE'])
-    score = Scores(r2_score.metrics(prediction, y), 
-                   mean_squared_error(prediction, y))
+    score = Scores(sklearn.metrics.r2_score(y, prediction),
+                   sklearn.metrics.mean_squared_error(y, prediction))
     print(score)
