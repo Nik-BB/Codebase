@@ -101,7 +101,7 @@ def run_cv(m_func, x, y, hp, epochs=10, k=10, p=1, benchmark=False,
             verbose=0)
 
         loss.append(hist.history['loss'])
-        val_loss.append([hist.history['val_loss']])
+        val_loss.append(hist.history['val_loss'])
         val_mae.append(hist.history['val_mae'])
         
     return loss, val_loss, val_mae, val_loss_mm, train_val_cls
