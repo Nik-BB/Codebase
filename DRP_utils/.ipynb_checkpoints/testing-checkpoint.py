@@ -89,3 +89,73 @@ def plot_heatmap(trained_model, x, y):
     score = Scores(sklearn.metrics.r2_score(y, prediction),
                    sklearn.metrics.mean_squared_error(y, prediction))
     print(score)
+
+    
+def multi_test_run(model_func, hps, epochs, xtrain, ytrain,
+                   xtest, ytest, num_runs, batch_size=128):
+    '''Builds and tests a keras regresstion model multiple times
+    
+    Finds the average and SD for the R^2 and MSE metrics across multiple runs  
+    using the same raning and testing data, model and hyper parms. This gives
+    the spread due to different initalisations / local minimums.
+    
+    Input
+    -----
+    model_func: function
+    retruns a complied keras model.
+    
+    hps: dict
+    hyper parameters accpected by model_func.
+    
+    epochs: int
+    number of epochs to train the model for.
+    
+    xtrain: List
+    where x[0] gives input traning omics data and x[1] gives input traning
+    drug data. Omic and drug data are pd dataframes. With cell lines in 
+    indexes and features in cols. 
+    
+    ytrain: pd series 
+    target tranning values.
+    
+    xtest: List
+    where x[0] gives input testing omics data and x[1] gives input testing
+    drug data. Omic and drug data are pd dataframes. With cell lines in 
+    indexes and features in cols. 
+    
+    ytest: pd series 
+    target testing values.
+    
+    num_runs: int
+    number of times to re-run the model and find metrics.
+    
+    Returns
+    -------
+    
+    summary_r: pd dataframe
+    summary statstics (mean standard devation) of the metrics over the 
+    multiple runs of the model.
+    
+    full results: pd dataframe
+    R^2 and MSE for each run of the model. 
+    '''
+    
+    r_dict = {'r2': [], 'mse': []}
+    for r in range(num_runs):
+        print(np.round(r / num_runs, 3))
+        
+        model = model_func(hps)
+        model.fit(xtrain, ytrain, epochs=epochs,
+                  batch_size=batch_size, verbose=0)
+        pre = model.predict(xtest)
+        pre = pre.reshape(len(pre))
+        r2 = sklearn.metrics.r2_score(ytest, pre)
+        mse = sklearn.metrics.mean_squared_error(ytest, pre)
+        r_dict['r2'].append(r2)
+        r_dict['mse'].append(mse)
+    summary_r = {'r2_mean': np.mean(r_dict['r2']),
+                'r2_sd': np.std(r_dict['r2']),
+                'mse_mean': np.mean(r_dict['mse']),
+                'mse_sd': np.std(r_dict['mse'])}
+    
+    return summary_r, pd.DataFrame(r_dict)
