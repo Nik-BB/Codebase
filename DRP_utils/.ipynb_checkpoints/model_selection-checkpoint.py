@@ -13,13 +13,13 @@ import collections
 
 
 def run_cv(m_func, x, y, hp, epochs=10, k=10, p=1, benchmark=False,
-           batch_size=128, verbos=1):
+           batch_size=128, verbos=1, random_seed=None):
     '''runs k fold cv p times 
     
     Inputs
     -----
     m_func: Function
-    that returns keras model
+    that returns keras model.
     
     x: List
     where x[0] gives input omics data and x[1] gives input drug data
@@ -27,28 +27,31 @@ def run_cv(m_func, x, y, hp, epochs=10, k=10, p=1, benchmark=False,
     and features in cols. 
     
     y: pd series 
-    target values
+    target values.
     
     hp: list
-    hyper parmaters that are to be inputed to m_func
+    hyper parmaters that are to be inputed to m_func.
     
     epochs: int
-    number of epochs to train the model for
+    number of epochs to train the model for.
     
     k: int
-    number of folds to run the cross valdation for
+    number of folds to run the cross valdation for.
     
     p: int
-    number of times to repeats the k fold cross validation 
+    number of times to repeats the k fold cross validation.
     
     benchmark: bool
     find the loss for a benchmark mean model to compare with the real model.
     
     batch_size: int
-    batch size of keras model
+    batch size of keras model.
     
     verbos: int
-    if 1 print out cv status
+    if 1 print out cv status.
+    
+    random_seed: int, or None, deafault=None
+    set random seed the same int to get identical splits. 
     
     Returns
     -------
@@ -56,7 +59,10 @@ def run_cv(m_func, x, y, hp, epochs=10, k=10, p=1, benchmark=False,
     val_loss_mm: loss of mean model benchmark
     train_val_cls: cls used for validation
     '''
-    cv = sklearn.model_selection.RepeatedKFold(n_splits=k, n_repeats=p) 
+    cv = sklearn.model_selection.RepeatedKFold(
+        n_splits=k,
+        n_repeats=p,
+        random_state=random_seed) 
     loss = []
     val_loss = []
     val_mae = []
