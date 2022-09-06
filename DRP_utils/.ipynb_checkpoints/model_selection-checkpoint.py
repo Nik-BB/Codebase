@@ -6,8 +6,10 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import keras_tuner as kt
 import sklearn
 import collections
+import testing.py as t_nb #my testing module
 
 
 
@@ -301,3 +303,152 @@ def run_random_hp_opt(param_grid, x, y, num_trails, model_func, epochs,
         val_losses.append(val_loss)
         
     return pd.DataFrame(opt_results), losses, val_losses 
+
+class Keras_tuner_opt:
+    '''Optmise the hyperparameter using keras tuner for a given dataset.
+    
+    Inputs
+    ------
+    
+    x: Array like
+    Traning input data
+    
+    y: Array like
+    Testing target data
+    
+    xval: Array like
+    Validation input data
+    
+    yval: Array like
+    Validaiton target data
+    
+    xtest: Array like
+    Testing input data
+    
+    ytest: Array like
+    Testing target data
+
+    m_func: Function
+    Returns keras tuner model. 
+        
+    '''
+    
+    def __init__(self, x=None, y=None, xval=None, yval=None, xtest=None, 
+                 ytest=None, model_function=None):
+        self.x = x
+        self.y = y 
+        self.xval = xval
+        self.yval = yval
+        self.xtest = xtest
+        self.ytest = ytest
+        self.model_func = model_function
+    
+    def kt_opt(self, num_trails=1, patience=5, epochs=100, batch_size=128, 
+               direc='my_dir', proj_name='test', ): 
+        '''Runs hyper parm opt for keras tuner object.
+        
+        Input
+        -----
+        
+        num_trails: Int
+        number of parameters to be randomly sampled
+                    
+        patience: Int
+        number of epochs to wait with metric improvement before triggering 
+        eairly stopping 
+
+        direc: str
+        directory to save the keras tuner trails to
+        
+        epochs: int
+        number of epochs to train the model for
+        
+        batch_size: int
+        batch size of keras model
+        
+        proj_name:
+        folder under direc to save the kears tuner trails to
+        '''
+        self.epochs=epochs
+    #create tuner object 
+        tuner = kt.RandomSearch(
+            hypermodel=self.model_func,
+            objective="val_loss",
+            max_trials=num_trails,
+            executions_per_trial=1,
+            overwrite=True,
+            directory=direc,
+            project_name=proj_name,
+        )
+
+        #run search 
+        callbacks = [tf.keras.callbacks.EarlyStopping(
+            monitor='val_loss', 
+            patience=patience,
+            restore_best_weights=True)]
+        
+        tuner.search(
+            self.x, 
+            self.y,
+            validation_data=(self.xval, self.yval),
+            epochs=self.epochs,
+            callbacks=callbacks,
+            batch_size = batch_size
+        )
+
+        self.tuner = tuner 
+    
+    def find_opt_hp(self, plot=True, verbose=0, patience=10):
+        '''Finds the optimal paremters of the optmial model
+        
+        Input
+        -----
+        plot: bool
+        if True plots loss curves 
+        if False no plots
+        
+        verbose: Int
+        controls the verbose of the model fitting
+        
+        patience: Int
+        number of epochs to wait with metric improvement before triggering 
+        eairly stopping 
+        
+        Output
+        ------
+        loss:
+        train loss
+        
+        val_loss: 
+        validaiton loss
+        '''
+        
+        opt_model = self.model_func(self.tuner.get_best_hyperparameters()[0])
+        callbacks = [tf.keras.callbacks.EarlyStopping(
+            monitor='val_loss', 
+            patience=patience,
+            restore_best_weights=True)]
+        
+        hist = opt_model.fit(
+            self.x, 
+            self.y, 
+            validation_data=(self.xval, self.yval), 
+            callbacks=callbacks,
+            epochs=self.epochs,
+            verbose=verbose
+        )
+        
+        loss = hist.history['loss']
+        val_loss = hist.history['val_loss']
+        epochs = np.argmin(val_loss)
+        self.opt_epochs = epochs
+        self.best_hps = self.tuner.get_best_hyperparameters()[0]
+        print(f'{self.tuner.get_best_hyperparameters()[0].values} epochs: {epochs}')
+        print(min(val_loss))
+        if plot: 
+            ms_nb.plot_cv(loss, val_loss, len(loss))
+            
+        return loss, val_loss
+            
+    def test(self):
+        t_nb.plot_heatmap(self.tuner.get_best_models()[0], self.xtest, self.ytest)
