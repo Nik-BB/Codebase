@@ -6,6 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import sklearn
 import collections
+import scipy
 
 def sort_results(pre, true, cls_drug_inds, centered):
     '''Sorts results so that they are drug and cell lines centered.
@@ -85,9 +86,11 @@ def plot_heatmap(trained_model, x, y):
     
     #improve formatting
     Scores = collections.namedtuple('Testing', ['R2','MSE'])
+    rho = scipy.stats.spearmanr(y, prediction)
     score = Scores(sklearn.metrics.r2_score(y, prediction),
                    sklearn.metrics.mean_squared_error(y, prediction))
     print(score)
+    print(rho)
 
     
 def multi_test_run(model_func, hps, epochs, xtrain, ytrain,
