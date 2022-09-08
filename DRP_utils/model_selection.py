@@ -9,7 +9,7 @@ import tensorflow as tf
 import keras_tuner as kt
 import sklearn
 import collections
-import testing.py as t_nb #my testing module
+import DRP_utils.testing as t_nb #my testing module
 
 
 
@@ -452,3 +452,23 @@ class Keras_tuner_opt:
             
     def test(self):
         t_nb.plot_heatmap(self.tuner.get_best_models()[0], self.xtest, self.ytest)
+
+        
+class Drug_response_opt(Keras_tuner_opt):
+    '''Spesfic testing for drug response prediction   
+    
+    '''
+    def test_by_cl(self, cl_to_pair, verb=0):
+        mse_r2_rho = {'cl': [], 'mse': [], 'r2': [], 'rho': []}
+        for key in test_cl_to_pair.keys():
+            pairs = test_cl_to_pair[key]
+            xt = [self.xtest[0].loc[pairs], self.xtest[1].loc[pairs]]
+            pre = self.tuner.get_best_models()[0].predict(xt)
+            true = self.ytest.loc[pairs]
+            if verb:
+                plt.plot(true, pre)
+            mse_r2_rho['cl'].append(key)
+            mse_r2_rho['mse'].append(sklearn.metrics.mean_squared_error(true, pre))
+            mse_r2_rho['r2'].append(sklearn.metrics.r2_score(true, pre))
+            mse_r2_rho['rho'].append(scipy.stats.spearmanr(true, pre)[0])
+        return pd.DataFrame(mse_r2_rho)
