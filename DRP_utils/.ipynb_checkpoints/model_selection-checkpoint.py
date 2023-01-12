@@ -27,8 +27,9 @@ def run_cv(m_func, x, y, hp, epochs=10, k=10, p=1, benchmark=False,
     
     x: List
     where x[0] gives input omics data and x[1] gives input drug data
-    omic and drug data are  PD 
-    dataframs, shape = (num_samples, num_features) with cell lines in indexes
+    omic and drug data are array like. shape (num_samples, ...)
+    where ... is depended on the dimensions of the features e.g. for PD 
+    datafram, shape = (num_samples, num_features) with cell lines in indexes
     and features in cols. 
     
     y: pd series 
@@ -78,6 +79,7 @@ def run_cv(m_func, x, y, hp, epochs=10, k=10, p=1, benchmark=False,
     #check same number of samples
     assert len(x[0]) == len(x[1]) == len(y)
     
+    
     i = 0
     for train_i, val_i in cv.split(x[0]):
         if verbos == 1:
@@ -101,11 +103,19 @@ def run_cv(m_func, x, y, hp, epochs=10, k=10, p=1, benchmark=False,
             val_loss_mm.append(loss_mm)
         
         model = m_func(hp)
+        if type(x[0]) == pd.DataFrame:
+            x0 = x[0].to_numpy()
+        else:
+            x0 = x[0]
+        if type(x[1]) == pd.DataFrame:
+            x1 = x[1].to_numpy()
+        else:
+            x1 = x[1]
         hist = model.fit(
-            [x[0].iloc[train_i], x[1].iloc[train_i]], 
+            [x0[train_i], x1[train_i]], 
             y.iloc[train_i],
             validation_data=(
-                [x[0].iloc[val_i], x[1].iloc[val_i]], 
+                [x0[val_i], x1[val_i]], 
                 y.iloc[val_i]),
             epochs=epochs, 
             batch_size=batch_size,
