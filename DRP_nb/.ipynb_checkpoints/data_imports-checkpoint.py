@@ -1,3 +1,10 @@
+''' Functions for spesfic data read ins and preprocessing.
+
+These functions are not generalisable due to the very different data formats
+of omics and drug response data downloaed. 
+Howerver, the functions are used offten across multiple projects with my DRP. 
+'''
+
 import numpy as np
 import pandas as pd
 import sys
@@ -338,4 +345,5 @@ def one_hot_encode_smiles():
     #To add
     #should be applied sepreately for train and test
     #but fine for cell-blind teste as all drugs in train set.
+    #think should add to DRP utils rather than this.
     pass 

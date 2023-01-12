@@ -1,4 +1,6 @@
-'''Reuseable functions for data preprocessing in drug response prediciton 
+'''Reuseable generalisable functions for data preprocessing in DRP.
+
+These functions can be extened to other problmes with little adjustment.
 
 '''
 
@@ -95,7 +97,7 @@ def create_all_drugs(x, xd, y, cells):
     y = y.loc[cells]
     x = x.loc[cells]
     x.astype(np.float16)
-    for i, d in enumerate(y.columns):
+    for i, d in enumerate(xd.columns):
         #find cell lines without missing truth values
         y_temp = y[d]
         nona_cells = y_temp.index[~np.isnan(y_temp)]

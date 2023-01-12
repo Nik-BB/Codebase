@@ -1,5 +1,7 @@
-'''Reuseable functions for model selection in drug response prediction.
+'''Reuseable functions for model selection in drug response prediction
 
+
+These functions can be extened to other problmes with little to no adjustments
 '''
 
 import numpy as np
@@ -25,7 +27,9 @@ def run_cv(m_func, x, y, hp, epochs=10, k=10, p=1, benchmark=False,
     
     x: List
     where x[0] gives input omics data and x[1] gives input drug data
-    omic and drug data are pd dataframes. With cell lines in indexes
+    omic and drug data are array like. shape (num_samples, ...)
+    where ... is depended on the dimensions of the features e.g. for PD 
+    datafram, shape = (num_samples, num_features) with cell lines in indexes
     and features in cols. 
     
     y: pd series 
