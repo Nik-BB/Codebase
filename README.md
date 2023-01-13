@@ -1,2 +1,2 @@
 # Codebase
-Reusable code used in PhD projects
+Reusable code used in mutiple PhD projects
