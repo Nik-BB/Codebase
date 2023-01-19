@@ -298,7 +298,9 @@ def read_inputs_rna_prot():
     return prot, rna, ic50_df1, one_hot_cls, one_hot_drugs
 
 
-def read_smiles(max_smile_len=90, pad_character='!'):
+def read_smiles(max_smile_len=90, pad_character='!', 
+                smile_path=f'{codebase_path}/downloaded_data_small'\
+                '/drugs_to_smiles'):
     '''Read and procsses smiles to all be the same length
     
     defalt max_smile_len=90 deterimed from hist of all smile lengths:
@@ -310,8 +312,7 @@ def read_smiles(max_smile_len=90, pad_character='!'):
     
     '''
     
-    drugs_to_smiles_raw = pd.read_csv(
-        f'{codebase_path}/downloaded_data_small/drugs_to_smiles', index_col=0)
+    drugs_to_smiles_raw = pd.read_csv(smile_path, index_col=0)
     
     #checks 
     smile_len = [len(smile) for smile in drugs_to_smiles_raw['smiles']]
