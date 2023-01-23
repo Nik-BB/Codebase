@@ -104,7 +104,7 @@ def split(seed, _all_cls, _all_drugs, all_targets, train_size=0.8,
 
     #checking split works as expected.  
  
-    if split_type =='cblind':   
+    if split_type == 'cblind':   
     #create mapping of cls to cl drug pairs for test train and val set. 
         def create_cl_to_pair_dict(cells):
             '''Maps a cell line to all cell line drug pairs with truth values
@@ -120,11 +120,11 @@ def split(seed, _all_cls, _all_drugs, all_targets, train_size=0.8,
                         dic[cell].append(pair)
             return dic
 
-            train_cl_to_pair = create_cl_to_pair_dict(train_cls)
-            test_cl_to_pair = create_cl_to_pair_dict(test_cls)
-            #check right number of cls 
-            assert len(train_cl_to_pair) == len(train_cls)
-            assert len(test_cl_to_pair) == len(test_cls)
+        train_cl_to_pair = create_cl_to_pair_dict(train_cls)
+        test_cl_to_pair = create_cl_to_pair_dict(test_cls)
+        #check right number of cls 
+        assert len(train_cl_to_pair) == len(train_cls)
+        assert len(test_cl_to_pair) == len(test_cls)
 
     if split_type == 'dblind':
         def create_cl_to_pair_dict(drugs):
