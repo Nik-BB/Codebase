@@ -3,7 +3,7 @@
 import numpy as np
 from torch.utils.data import Dataset
 
-class DualPdInputs(Dataset):
+class DualInputs(Dataset):
     '''Creates dataset for use with pytorch data loader for two inputs x1 x2
     
     ---Inputs---
@@ -18,7 +18,7 @@ class DualPdInputs(Dataset):
     
     expand_x1_dim: bool, defalt=False
     Add empty dimention to x1 in axis=1 can be used for channel dim in CNN
-    e.g. if expand_x1_dim=True and x1.shape=(N, F) --> x1.shape=(N, 1, F) 
+    e.g. if expand_x1_dim=True and x1.shape=(N, F) --> x1.shape=(N, 1, F)
     
     expand_x2_dim: bool, defalt=False
     equivalent for x2 as expand_x1_dim

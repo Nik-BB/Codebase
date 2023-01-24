@@ -3,7 +3,7 @@
 import numpy as np
 from torch.utils.data import Dataset
 
-class DualPdInputs(Dataset):
+class DualInputs(Dataset):
     '''Creates dataset for use with pytorch data loader for two inputs x1 x2
     
     ---Inputs---
