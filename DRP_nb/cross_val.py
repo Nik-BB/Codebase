@@ -1,8 +1,8 @@
 '''Reuseable functions for cross validation (CV) in drug response prediction
 
-CV is implemented in 3 different ways
+CV can be implemented in 3 different ways
 
-Mixed: standared CV there can be overlap between cells or drugs in val and
+Mixed: standard CV there can be overlap between cells or drugs in val and
 partial train set
 Cancer blind: cell lines in the partial training set can not be in the
 validation set
@@ -15,7 +15,7 @@ import pandas as pd
 
 def run_cv_cblind(m_func, x, y, hp, epochs=10, k=10, p=1, batch_size=128, 
                   verbos=1, random_seed=None):
-    '''runs cancer blind k fold cv p times 
+    '''runs cancer blind k fold cv p times for kears model
     
     cancer blind means cell lines in the train set are not in the val set
     
@@ -259,4 +259,3 @@ def best_metric(metric, rounded=True):
         return Min_metric(m[argmin], np.round(sd[argmin], 3), argmin)
     else:
         return Min_metric(m[argmin], sd[argmin], argmin)
-        

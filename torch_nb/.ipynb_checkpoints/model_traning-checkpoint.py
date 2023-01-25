@@ -4,12 +4,18 @@
 import torch
 from torch import nn
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 def train_loop(train_dl=None, val_dl=None, model=None, loss_fn=nn.MSELoss(), 
                optimiser=None, epochs=10, verb=1):
     '''Torch train loop for arbitrary number of input data types
     
-    '''    
+    '''  
+    print('')
+    print(f"Using {device} device")
+    print('')
+    
+    train_hist = {'train_loss': [], 'val_loss': []}
     for e in range(epochs):
         
         loss_train = 0.0
@@ -29,7 +35,9 @@ def train_loop(train_dl=None, val_dl=None, model=None, loss_fn=nn.MSELoss(),
             optimiser.step()
             
             loss_train += loss.item()
-            
+        
+        train_hist['train_loss'].append(loss_train / len(train_dl))
+        
         if val_dl:
             # Find validaiton loss
             val_loss = 0.0
@@ -43,7 +51,8 @@ def train_loop(train_dl=None, val_dl=None, model=None, loss_fn=nn.MSELoss(),
                     val_pred = model(*xv)
                     v_loss = loss_fn(val_pred, yv)
                     val_loss += v_loss.item()
-
+            train_hist['val_loss'].append(val_loss / len(val_dl))    
+            
         if verb > 0:
             print(f'Epoch {e + 1}\n-----------------')
             ftl = loss_train / len(train_dl)
@@ -52,3 +61,5 @@ def train_loop(train_dl=None, val_dl=None, model=None, loss_fn=nn.MSELoss(),
                 print(f'Train loss: {ftl:>5f}, Val loss: {fvl:>5f}')
             else:
                 print(f'Train loss: {ftl:>5f}')
+                
+    return train_hist
