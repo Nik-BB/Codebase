@@ -6,7 +6,6 @@ import pandas as pd
 import collections
 from DRP_nb import cross_val
 
-
 def run_random_hp_opt(param_grid, x, y, num_trails, model_func, epochs,
                       k=3, p=1, batch_size=128, cv_type='cblind'):
     '''Random search to find optmal hyper parameters
@@ -53,7 +52,7 @@ def run_random_hp_opt(param_grid, x, y, num_trails, model_func, epochs,
         cv_imp = cross_val.run_cv_cblind
     if cv_type == 'dblind':
         cv_imp = cross_val.run_cv_dblind
-    #choose implementation of cv 
+ 
     rng = np.random.default_rng()
     hp_inds = rng.choice(len(param_grid), size=num_trails, replace=False)
 
@@ -73,7 +72,7 @@ def run_random_hp_opt(param_grid, x, y, num_trails, model_func, epochs,
                                     epochs=epochs,
                                     batch_size=batch_size)   
 
-        min_loss, sd, epoch = best_metric(val_loss)
+        min_loss, sd, epoch = cross_val.best_metric(val_loss)
         opt_results['Smallest val loss'].append(min_loss)
         opt_results['SD'].append(sd)
         opt_results['Epoch'].append(epoch)
@@ -85,29 +84,3 @@ def run_random_hp_opt(param_grid, x, y, num_trails, model_func, epochs,
         
     return pd.DataFrame(opt_results), losses, val_losses 
 
-def cv_metric(metric, func):
-    """Finds func of cv across a number of epochs as outputted from run_cv
-    
-    e.g. for func = np.mean gives mean at each epoch
-    """
-    metricT = np.array(metric).T
-    result = []
-    for i in range(len(metricT)):
-        result.append(func(metricT[i]))
-    return np.array(result)
-
-
-
-def best_metric(metric, rounded=True):
-    '''Finds the minimum of a metric in the form outputted form run_cv
-    '''
-    m = cv_metric(metric, np.mean)
-    sd = cv_metric(metric, np.std)
-    argmin = np.argmin(m)
-    #make formatting more readable
-    Min_metric = collections.namedtuple('MinMetric', ['mean', 'sd', 'index'])
-    if rounded:
-        return Min_metric(m[argmin], np.round(sd[argmin], 3), argmin)
-    else:
-        return Min_metric(m[argmin], sd[argmin], argmin)
-        

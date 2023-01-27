@@ -6,7 +6,6 @@ import pandas as pd
 import collections
 from DRP_nb import cross_val
 
-
 def run_random_hp_opt(param_grid, x, y, num_trails, model_func, epochs,
                       k=3, p=1, batch_size=128, cv_type='cblind'):
     '''Random search to find optmal hyper parameters
@@ -53,7 +52,7 @@ def run_random_hp_opt(param_grid, x, y, num_trails, model_func, epochs,
         cv_imp = cross_val.run_cv_cblind
     if cv_type == 'dblind':
         cv_imp = cross_val.run_cv_dblind
-    #choose implementation of cv 
+ 
     rng = np.random.default_rng()
     hp_inds = rng.choice(len(param_grid), size=num_trails, replace=False)
 
@@ -73,7 +72,7 @@ def run_random_hp_opt(param_grid, x, y, num_trails, model_func, epochs,
                                     epochs=epochs,
                                     batch_size=batch_size)   
 
-        min_loss, sd, epoch = best_metric(val_loss)
+        min_loss, sd, epoch = cross_val.best_metric(val_loss)
         opt_results['Smallest val loss'].append(min_loss)
         opt_results['SD'].append(sd)
         opt_results['Epoch'].append(epoch)
