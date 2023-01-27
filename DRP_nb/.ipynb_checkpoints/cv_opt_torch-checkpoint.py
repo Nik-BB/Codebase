@@ -11,8 +11,10 @@ validation
 '''
 import torch 
 import sklearn
+import collections
 from torch import nn
 import numpy as np
+import pandas as pd
 from torch.utils.data.dataset import Subset
 from torch.utils.data import DataLoader
 
@@ -73,7 +75,8 @@ def run_cv_cblind_torch(m_func, train_data, hp, epochs=10, k=3, p=1, verbos=1,
     hist: dic that gives history of model traning
     train_val_cls: cls used for validation
     '''
-    print(f'Traning on {device}')
+    if verbos > 0:
+        print(f'Traning on {device}')
     
     cv = sklearn.model_selection.RepeatedKFold(
         n_splits=k,
@@ -94,7 +97,7 @@ def run_cv_cblind_torch(m_func, train_data, hp, epochs=10, k=3, p=1, verbos=1,
     #splits by cell lines then finds all cell line drug pairs assicted with
     #these cell lines
     for train_c_i, val_c_i in cv.split(u_cells):
-        if verbos == 1:
+        if verbos > 0:
             print(i / (k * p))
         p_train_cells, val_cells = u_cells[train_c_i], u_cells[val_c_i]
         train_val_cls[0].append(p_train_cells)
@@ -124,7 +127,8 @@ def run_cv_cblind_torch(m_func, train_data, hp, epochs=10, k=3, p=1, verbos=1,
             model=model,
             loss_fn=loss_fn,
             optimiser=optimiser,
-            epochs=epochs)
+            epochs=epochs, 
+            verb=verbos - 1)
         
         hists.append(hist)
         #loss.append(hist.history['loss'])
@@ -158,12 +162,13 @@ def best_metric(metric, rounded=True):
     else:
         return Min_metric(m[argmin], sd[argmin], argmin)
     
+    
 
 def run_random_hp_opt(param_grid, train_data, num_trails, model_func, epochs, 
-                      k=3, p=1, batch_size=128, cv_type='cblind', verb=1, 
+                      k=3, p=1, batch_size=128, cv_type='cblind', verbos=1, 
                       drug_cl_index=None, train_loop=None,
                       loss_fn=None, optimiser_fun=None):
-     '''Random search to find optmal hyper parameters for pytorch model
+    '''Random search to find optmal hyper parameters for pytorch model
     
     Inputs
     -----
@@ -171,8 +176,9 @@ def run_random_hp_opt(param_grid, train_data, num_trails, model_func, epochs,
     grid of hyper parameters (hps) to search over
     
      
-    train_data: torch Dataloader instance
-    where __getitem__ returns x_omic x_drug, y the omic drug and target data
+    train_data: Dataset instance
+    where train_data can be used as an input to pytorch DataLoader.
+    Thus, __getitem__ returns x_omic x_drug, y the omic drug and target data
     respectively
     
     num_trails: Int
@@ -198,6 +204,11 @@ def run_random_hp_opt(param_grid, train_data, num_trails, model_func, epochs,
     -------
     optmisation results: pd dataframe
     of the search results 
+    
+    losses: list of cv losses
+    
+    val_losses: list of cv val losses
+    
     '''
         
     #set the cv implementation 
@@ -211,20 +222,21 @@ def run_random_hp_opt(param_grid, train_data, num_trails, model_func, epochs,
     hp_inds = rng.choice(len(param_grid), size=num_trails, replace=False)
     
     opt_results = {'Smallest val loss': [], 'SD': [], 'Epoch': [], 'HPs': []}
-    losses, val_losses = [], []
+    run_hists = []
     
     for i, ind in enumerate(hp_inds):
-        if verb > 0:
-            print(i/num_trails)
+        if verbos > 0:
+            print(f'Fraction of search completed: {i/num_trails:.3}')
         hps = param_grid[ind]
         
-        hist, train_val_cls = cross_val_torch.run_cv_cblind_torch(
+        hists, train_val_cls = cv_imp(
             m_func=model_func,
             train_data=train_data,
             hp=hps,
             epochs=epochs,
             k=k,
             p=p,
+            verbos=verbos - 1,
             random_seed=None,
             drug_cl_index=drug_cl_index,
             train_loop=train_loop,
@@ -233,16 +245,16 @@ def run_random_hp_opt(param_grid, train_data, num_trails, model_func, epochs,
             batch_size=batch_size
         )
         
-        min_loss, sd, epoch = best_metric(hists['val_loss'])
+        val_losses = [fold['val_loss'] for fold in hists]
+        min_loss, sd, epoch = best_metric(val_losses)
         opt_results['Smallest val loss'].append(min_loss)
         opt_results['SD'].append(sd)
         opt_results['Epoch'].append(epoch)
         opt_results['HPs'].append(hps)
 
         #keep if loss plots needed
-        losses.append(loss)
-        val_losses.append(val_loss)
+        run_hists.append(hists)
         
-    return pd.DataFrame(opt_results), losses, val_losses 
+    return pd.DataFrame(opt_results), run_hists
         
     

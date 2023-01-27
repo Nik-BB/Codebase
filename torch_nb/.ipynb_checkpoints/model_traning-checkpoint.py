@@ -11,9 +11,10 @@ def train_loop(train_dl=None, val_dl=None, model=None, loss_fn=nn.MSELoss(),
     '''Torch train loop for arbitrary number of input data types
     
     '''  
-    print('')
-    print(f"Using {device} device")
-    print('')
+    if verb > 0:
+        print('')
+        print(f"Using {device} device")
+        print('')
     
     train_hist = {'train_loss': [], 'val_loss': []}
     for e in range(epochs):
