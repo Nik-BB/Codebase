@@ -12,7 +12,8 @@ _colours  = plt.cm.Dark2
 def multi_lines_scatter(x=None, ys=None, ax=None, labels=None, scale='linear', 
                         log_scale_base=2, num_grid_lines=5, errors=[], 
                         alpha=0.5, ax_labels=None, leg=True, m_size=20, 
-                        line=True, err_type='cont'):
+                        line=True, err_type='cont', show_markers=True, 
+                        linewidth=10, update_xticks=False):
     
     
     #pad lable if none so can loop over zip 
@@ -50,13 +51,20 @@ def multi_lines_scatter(x=None, ys=None, ax=None, labels=None, scale='linear',
                 
                 
     else:
-        for i, (y, label) in enumerate((ys, labels)):
-            if len(ys) < 4:
-                linestyle = _linestyles[i]
-            else:
-                linestyle = linestyle[0]
-            ax.scatter(x, y, label=label, marker=_markers[i], linestyle=linestyle)
+        if show_markers:
+            for i, (y, label) in enumerate(zip(ys, labels)):
+                if len(ys) < 4:
+                    linestyle = _linestyles[i]
+                else:
+                    linestyle = linestyle[0]
+                ax.scatter(x, y, label=label, marker=_markers[i], 
+                           linestyle=linestyle)
+        else:
+            for i, (y, label) in enumerate(zip(ys, labels)):
+                ax.plot(x, y, label=label, linewidth=linewidth, 
+                        color=colours[i])
             
+
     #change the scale     
     if scale == 'log':
         plt.xscale('log', base=log_scale_base)
@@ -67,6 +75,12 @@ def multi_lines_scatter(x=None, ys=None, ax=None, labels=None, scale='linear',
         yticks = np.logspace(ymin, ymax, base=log_scale_base, 
                              num=num_grid_lines)
         ax.set_yticks(yticks)
+        if update_xticks:
+            xmin, xmax = np.log2(ax.get_xlim())
+            xticks = np.logspace(xmin, xmax, base=log_scale_base,
+                                 num=num_grid_lines)
+            ax.set_xticks(xticks)
+            
         if labels[0] and leg:
             pass
             ax.legend(fontsize=8)
