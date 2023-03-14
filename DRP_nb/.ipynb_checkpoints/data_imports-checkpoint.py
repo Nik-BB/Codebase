@@ -3,6 +3,11 @@
 These functions are not generalisable due to the very different data formats
 of omics and drug response data downloaed. 
 Howerver, the functions are used offten across multiple projects with my DRP. 
+
+To do
+-----
+Change input norm if dblind or mixed
+should norm by drug if dblind should norm by train set if mixed
 '''
 
 import numpy as np
