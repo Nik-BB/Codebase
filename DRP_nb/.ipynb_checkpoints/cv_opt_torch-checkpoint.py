@@ -15,6 +15,7 @@ import collections
 from torch import nn
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from torch.utils.data.dataset import Subset
 from torch.utils.data import DataLoader
 
@@ -257,4 +258,92 @@ def run_random_hp_opt(param_grid, train_data, num_trails, model_func, epochs,
         
     return pd.DataFrame(opt_results), run_hists
         
+def plot_cv(test, val, epochs, err=2, skip_epochs=0,
+            mm_loss = [], y_lab='Loss', 
+            save_name=''):
+    '''Func to plot the cross validation loss or metric
     
+    Inputs
+    ------
+    test: list, of length number of cv folds, with each element of the list
+    contaning a lists with the test set loss or metric. 
+        
+    val: same as test but with validation data  
+    
+    epochs: number of epochs model traiend for
+    
+    err: 0 1 or 2, defalt=2
+    If 0, no error plotted
+    If 1, error bars (s.d) plotted
+    If 2, contionus error plotted
+    
+    skip_epochs: int, defalt=0
+    number of epochs to skip at the start of plotting 
+    
+    y_lab: str, defalt=loss
+    y label to plot
+    
+    save_name: str, defalt=''
+    file_path\name to save fig. if defalt fig not saved
+    '''
+    x = range(1, epochs + 1 - skip_epochs) 
+    val_mean = cv_metric(val, np.mean)
+    test_mean = cv_metric(test, np.mean)
+    val_sd = cv_metric(val, np.std)
+    test_sd = cv_metric(test, np.std)
+    if mm_loss:
+        val_mm_mean = np.mean(mm_loss)
+        val_mm_mean = np.array([val_mm_mean] * epochs)
+        val_mm_sd = np.std(mm_loss)
+        val_mm_sd = np.array([val_mm_sd] * epochs)
+    
+    if err == 1:
+        plt.errorbar(
+            x, test_mean[skip_epochs: ], yerr= test_sd[skip_epochs: ], 
+            label='Test')
+        plt.errorbar(
+            x, val_mean[skip_epochs: ],  yerr = val_sd[skip_epochs: ], 
+            label='Validation')
+        plt.fill_between(
+            x, test_mean[skip_epochs: ] - test_sd[skip_epochs: ], 
+            yfit + test_sd[skip_epochs: ], color='gray', alpha=0.2)
+        
+        
+        plt.legend()
+        plt.xlabel('Epochs')
+        plt.ylabel(y_lab)
+        
+    if err == 2:
+        plt.plot(x, test_mean[skip_epochs: ], label='Test')
+        plt.plot(x, val_mean[skip_epochs: ], label='Validation')
+        plt.fill_between(x, test_mean[skip_epochs: ] - test_sd[skip_epochs: ], 
+                         test_mean[skip_epochs: ] + test_sd[skip_epochs: ], 
+                         color='gray', alpha=0.8)
+        plt.fill_between(x, val_mean[skip_epochs: ] - val_sd[skip_epochs: ], 
+                 val_mean[skip_epochs: ] + val_sd[skip_epochs: ], 
+                 color='gray', alpha=0.8)
+        if mm_loss:
+            plt.plot(x, val_mm_mean[skip_epochs: ], label='Mean')
+            plt.fill_between(x, val_mm_mean[skip_epochs: ] - val_mm_sd[skip_epochs: ],
+                             val_mm_mean[skip_epochs: ] + val_mm_sd[skip_epochs: ],
+                             alpha=0.6)
+
+        plt.legend()
+        plt.xlabel('Epochs')
+        plt.ylabel(y_lab)        
+        
+    else: 
+        plt.plot(x, test_mean[skip_epochs: ], label='Test')
+        plt.plot(x, val_mean[skip_epochs: ], label='Validation')
+        plt.plot(x, val_mm_mean[skip_epochs: ], label='Mean')
+        plt.legend()
+        
+    if save_name:
+        plt.savefig(save_name, dpi=1000)
+    
+    *_, best_epoch = best_metric(val)
+    plt.axvline(best_epoch)
+        
+    print(best_metric(val))
+        
+    plt.show()
