@@ -342,7 +342,7 @@ def plot_cv(test, val, epochs, err=2, skip_epochs=0,
         plt.savefig(save_name, dpi=1000)
     
     *_, best_epoch = best_metric(val)
-    plt.axvline(best_epoch)
+    plt.axvline(1 + best_epoch - skip_epochs)
         
     print(best_metric(val))
         
