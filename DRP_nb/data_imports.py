@@ -332,10 +332,10 @@ def read_smiles(max_smile_len=90, pad_character='!',
     for smile in drugs_to_smiles_raw['smiles']:
     #subset smiles that are too long
         if len(smile) > max_smile_len:
-            new_smile = smile[: 90]
+            new_smile = smile[: max_smile_len]
         #add padding to shorter smiles
-        elif len(smile) < 90:
-            new_smile = smile + '!' * (90 - len(smile))
+        elif len(smile) < max_smile_len:
+            new_smile = smile + '!' * (max_smile_len - len(smile))
         new_smiles.append(new_smile)
 
     drugs_to_smiles = pd.DataFrame(
