@@ -3,7 +3,7 @@
 '''
 import torch
 from torch import nn
-
+from scipy.stats import pearsonr
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 def train_loop(train_dl=None, val_dl=None, model=None, loss_fn=nn.MSELoss(), 
@@ -128,6 +128,8 @@ def tl_multi_dls(train_dls=None, y_train=None, val_dls=None, y_val=None, model=N
             if val_dls:
                 fvl = val_loss / len(val_dls[0])
                 print(f'Train loss: {ftl:>5f}, Val loss: {fvl:>5f}')
+                print(pearsonr(yv.reshape(len(yv)), 
+                               val_pred.reshape(len(val_pred))))
             else:
                 print(f'Train loss: {ftl:>5f}')
     return train_hist
