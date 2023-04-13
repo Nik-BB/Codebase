@@ -97,9 +97,9 @@ class EarlyStopping:
             self.count = 0 
             self.best_model_dict = self.model.state_dict()
         #if loss does not improved more than delta 
-        elif val_loss > (self.min_val_loss + self.delta):
+        elif val_loss >= (self.min_val_loss + self.delta):
             self.count += 1
-            if self.count >= 10: 
+            if self.count >= self.patience: 
                 return True
             
         return False #if stopping contions not met
@@ -174,11 +174,13 @@ def tl_multi_dls(train_dls=None, y_train=None, val_dls=None, y_val=None,
             train_hist['val_loss'].append(val_loss / len(val_dls[0]))
             
             #eairly stopping
-            if early_stopper:
+            if early_stopping_dict:
                 if early_stopper.earily_stop(val_loss):
+                    print('')
                     print(f'stopping early at epoch {e + 1}')
+                    print(f'best epoch {e + 1 - early_stopper.patience}')
                     best_model_dict  = early_stopper.best_model_dict
-                    model = model.load_state_dict(best_model_dict)
+                    #model = model.load_state_dict(best_model_dict)
                     model.eval()
                     break
                     
