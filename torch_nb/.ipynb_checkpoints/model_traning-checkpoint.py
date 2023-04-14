@@ -123,6 +123,7 @@ def tl_multi_dls(train_dls=None, y_train=None, val_dls=None, y_val=None,
     if early stopping implemented best model is used to overwrite model
     '''
     train_hist = {'train_loss': [], 'val_loss': []}
+    best_model_dict = None
     assert type(train_dls) == list
     
     #early stopping
@@ -180,7 +181,7 @@ def tl_multi_dls(train_dls=None, y_train=None, val_dls=None, y_val=None,
                     print(f'stopping early at epoch {e + 1}')
                     print(f'best epoch {e + 1 - early_stopper.patience}')
                     best_model_dict  = early_stopper.best_model_dict
-                    #model = model.load_state_dict(best_model_dict)
+                    model.load_state_dict(best_model_dict)
                     model.eval()
                     break
                     
@@ -195,3 +196,87 @@ def tl_multi_dls(train_dls=None, y_train=None, val_dls=None, y_val=None,
             else:
                 print(f'Train loss: {ftl:>5f}')
     return train_hist, best_model_dict
+
+
+#graph data loader for torch geomtric 
+def tl_dual_graph(train_dl1=None, train_dl2=None, val_dl1=None, val_dl2=None, model=None, loss_fn=nn.MSELoss(), 
+               optimiser=None, epochs=10, verb=1, early_stopping_dict=None):
+    '''torch train loop for two data loaders
+    where train_dl1.y gives target values
+    
+    '''
+    train_hist = {'train_loss': [], 'val_loss': []}
+    best_model_dict = None
+    
+    #early stopping
+    if early_stopping_dict and val_dl1:
+        p, d = early_stopping_dict['patience'], early_stopping_dict['delta']
+        early_stopper = EarlyStopping(model, patience=p, delta=d)
+    
+    for e in range(epochs):
+        
+        loss_train = 0.0
+        model.train()
+        for batch, (x1, x2) in enumerate(zip(train_dl1, train_dl2)):
+            x1, x2 = x1.to(device), x2.to(device)
+            y = x1.y.to(device)
+
+            # Compute prediction error
+            pred = model(x1, x2)
+            #print(pred.shape)
+            pred = pred.reshape(len(pred))
+            loss = loss_fn(pred, y)
+
+            # Backpropagation
+            optimiser.zero_grad()
+            loss.backward()
+            optimiser.step()
+            
+            loss_train += loss.item()
+            
+        train_hist['train_loss'].append(loss_train / len(train_dl1))
+        
+        if val_dl1:
+            #find validaiton loss
+            val_loss = 0.0
+            r2 = 0.0
+            mse_val = 0.0 
+
+            model.eval()   
+            with torch.no_grad():
+                for x1v, x2v in zip(val_dl1, val_dl2):
+                    x1v, x2v = x1v.to(device), x2v.to(device) 
+                    yv = x1v.y.to(device)
+                    val_pred = model(x1v, x2v)
+                    val_pred = val_pred.reshape(len(val_pred))
+                    v_loss = loss_fn(val_pred, yv)
+                    val_loss += v_loss.item()
+                    yv = yv.cpu().detach().numpy()
+                    val_pred = val_pred.cpu().detach().numpy()
+                    #r2 = r2_score(yv, val_pred)
+                    #mse_val = mean_squared_error(yv, val_pred)
+                    #print(r2, mse_val)
+            train_hist['val_loss'].append(val_loss / len(val_dl1))
+            
+            #eairly stopping
+            if early_stopping_dict:
+                if early_stopper.earily_stop(val_loss):
+                    print('')
+                    print(f'stopping early at epoch {e + 1}')
+                    print(f'best epoch {e + 1 - early_stopper.patience}')
+                    best_model_dict  = early_stopper.best_model_dict
+                    model.load_state_dict(best_model_dict)
+                    model.eval()
+                    break
+
+        if verb > 0:
+            print(f'Epoch {e + 1}\n-----------------')
+            ftl = loss_train / len(train_dl1)
+            if val_dl1:
+                fvl = val_loss / len(val_dl1)
+                print(f'Train loss: {ftl:>5f}, Val loss: {fvl:>5f}')
+                print(pearsonr(yv.reshape(len(yv)), 
+                               val_pred.reshape(len(val_pred))))
+            else:
+                print(f'Train loss: {ftl:>5f}')
+    return train_hist
