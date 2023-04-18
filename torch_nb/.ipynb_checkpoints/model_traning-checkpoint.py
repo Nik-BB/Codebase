@@ -7,6 +7,7 @@ import numpy as np
 from scipy.stats import pearsonr
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
+
 def train_loop(train_dl=None, val_dl=None, model=None, loss_fn=nn.MSELoss(), 
                optimiser=None, epochs=10, verb=1):
     '''Torch train loop for arbitrary number of input data types
@@ -82,20 +83,23 @@ class EarlyStopping:
     How much the loss needs to decrease by to count as an improvement
     e.g. delta=1 means the loss needs to be at least 1 less than previous best loss
     '''
-    def __init__(self, model, patience=10, delta=0.0):
+    def __init__(self, patience=10, delta=0.0):
         self.patience = patience
         self.delta = delta
         self.count = 0
         self.min_val_loss = np.inf
         self.best_model_dict = None
-        self.model = model
+        self.best_epoch = None
         
-    def earily_stop(self, val_loss):
+    def earily_stop(self, val_loss, model_state, e=0):
         #if loss improves 
         if val_loss < self.min_val_loss:
+            print(f'loss improved from {self.min_val_loss} to {val_loss}')
             self.min_val_loss = val_loss
             self.count = 0 
-            self.best_model_dict = self.model.state_dict()
+            #self.best_model_dict = model_state
+            #Save
+            torch.save(model_state, 'early_stop_temp')
         #if loss does not improved more than delta 
         elif val_loss >= (self.min_val_loss + self.delta):
             self.count += 1
@@ -113,14 +117,29 @@ def tl_multi_dls(train_dls=None, y_train=None, val_dls=None, y_val=None,
     '''torch train loop for two data loaders
     
     ------inputs------
-    train_dls: iterable 
-    contains multiple inputs where each input is a data loader
+    train_dls: list like 
+    contains multiple inputs where each input is a data loader 
+    for the traning data
     
+    y_train: DataLoader
+    dataloader with the target traning values
+    
+    val_dls: list like
+    contains multiple inputs where each input is a data loader
+    for the validaiton data
+    
+    y_val: DataLoader
+    dataloader with the target valdiation values
+    
+    
+    early_stopping_dict: dict
+    contains earily stopping param
     
     ------returns------
-    rain_hist, best_model_dict
+    rain_hist, best_model_dict, patience=10 and delta=0.0
     
     if early stopping implemented best model is used to overwrite model
+    this happens even when early stopping is't tirggered
     '''
     train_hist = {'train_loss': [], 'val_loss': []}
     best_model_dict = None
@@ -129,7 +148,7 @@ def tl_multi_dls(train_dls=None, y_train=None, val_dls=None, y_val=None,
     #early stopping
     if early_stopping_dict and val_dls:
         p, d = early_stopping_dict['patience'], early_stopping_dict['delta']
-        early_stopper = EarlyStopping(model, patience=p, delta=d)
+        early_stopper = EarlyStopping(patience=p, delta=d)
     
     for e in range(epochs):
         #train_dls_y = train_dls
@@ -176,13 +195,13 @@ def tl_multi_dls(train_dls=None, y_train=None, val_dls=None, y_val=None,
             
             #eairly stopping
             if early_stopping_dict:
-                if early_stopper.earily_stop(val_loss):
+                if early_stopper.earily_stop(val_loss, model.state_dict()):
                     print('')
                     print(f'stopping early at epoch {e + 1}')
                     print(f'best epoch {e + 1 - early_stopper.patience}')
-                    best_model_dict  = early_stopper.best_model_dict
-                    model.load_state_dict(best_model_dict)
-                    model.eval()
+                    #best_model_dict  = early_stopper.best_model_dict
+                    #model.load_state_dict(best_model_dict)
+                    #model.eval()
                     break
                     
         if verb > 0:
@@ -195,7 +214,16 @@ def tl_multi_dls(train_dls=None, y_train=None, val_dls=None, y_val=None,
                                val_pred.reshape(len(val_pred))))
             else:
                 print(f'Train loss: {ftl:>5f}')
-    return train_hist, best_model_dict
+                
+     #load best model if early stoppng triggers or not
+    if early_stopping_dict:
+        print('loading best model')
+        #best_model_dict  = early_stopper.best_model_dict
+        #model.load_state_dict(best_model_dict)
+        model.load_state_dict(torch.load('early_stop_temp'))
+        model.eval()
+        
+    return train_hist
 
 
 #graph data loader for torch geomtric 
@@ -206,12 +234,11 @@ def tl_dual_graph(train_dl1=None, train_dl2=None, val_dl1=None, val_dl2=None, mo
     
     '''
     train_hist = {'train_loss': [], 'val_loss': []}
-    best_model_dict = None
     
     #early stopping
     if early_stopping_dict and val_dl1:
         p, d = early_stopping_dict['patience'], early_stopping_dict['delta']
-        early_stopper = EarlyStopping(model, patience=p, delta=d)
+        early_stopper = EarlyStopping(patience=p, delta=d)
     
     for e in range(epochs):
         
@@ -260,13 +287,13 @@ def tl_dual_graph(train_dl1=None, train_dl2=None, val_dl1=None, val_dl2=None, mo
             
             #eairly stopping
             if early_stopping_dict:
-                if early_stopper.earily_stop(val_loss):
+                if early_stopper.earily_stop(val_loss, model.state_dict()):
                     print('')
                     print(f'stopping early at epoch {e + 1}')
                     print(f'best epoch {e + 1 - early_stopper.patience}')
-                    best_model_dict  = early_stopper.best_model_dict
-                    model.load_state_dict(best_model_dict)
-                    model.eval()
+                    #bm_dict  = early_stopper.best_model_dict
+                    #model.load_state_dict(bm_dict)
+                    #model.eval()
                     break
 
         if verb > 0:
@@ -279,4 +306,10 @@ def tl_dual_graph(train_dl1=None, train_dl2=None, val_dl1=None, val_dl2=None, mo
                                val_pred.reshape(len(val_pred))))
             else:
                 print(f'Train loss: {ftl:>5f}')
+                
+     #load best model if early stoppng triggers or not
+    if early_stopping_dict:
+        model.load_state_dict(torch.load('early_stop_temp'))
+        model.eval()
+        
     return train_hist
