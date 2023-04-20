@@ -22,10 +22,10 @@ from torch.utils.data import DataLoader
 device = "cuda" if torch.cuda.is_available() else "cpu" 
 device
 
-def run_cv_cblind_torch(m_func, train_data, hp, epochs=10, k=3, p=1, verbos=1, 
-                        random_seed=None, drug_cl_index=None, train_loop=None,
-                        batch_size=512, loss_fn=nn.MSELoss(), 
-                        optimiser_fun=None):
+def run_cv_cblind_torch(m_func, train_data, hp, drug_cl_index, train_loop, 
+                        optimiser_fun, epochs=10, k=3, p=1, verbos=1, 
+                        random_seed=None, loss_fn=nn.MSELoss(),
+                        batch_size=512):
     '''runs cancer blind k fold cv p times for pytorch model
     
     cancer blind means cell lines in the train set are not in the val set
@@ -35,7 +35,7 @@ def run_cv_cblind_torch(m_func, train_data, hp, epochs=10, k=3, p=1, verbos=1,
     m_func: Function
     that returns pytorch model.
     
-    train_data: torch Dataloader instance
+    train_data: Dataset instance
     where __getitem__ returns x_omic x_drug, y the omic drug and target data
     respectively
     
@@ -265,7 +265,7 @@ def plot_cv(test, val, epochs, err=2, skip_epochs=0,
     
     Inputs
     ------
-    test: list, of length number of cv folds, with each element of the list
+    train: list, of length number of cv folds, with each element of the list
     contaning a lists with the test set loss or metric. 
         
     val: same as test but with validation data  
@@ -300,7 +300,7 @@ def plot_cv(test, val, epochs, err=2, skip_epochs=0,
     if err == 1:
         plt.errorbar(
             x, test_mean[skip_epochs: ], yerr= test_sd[skip_epochs: ], 
-            label='Test')
+            label='Train')
         plt.errorbar(
             x, val_mean[skip_epochs: ],  yerr = val_sd[skip_epochs: ], 
             label='Validation')
@@ -314,7 +314,7 @@ def plot_cv(test, val, epochs, err=2, skip_epochs=0,
         plt.ylabel(y_lab)
         
     if err == 2:
-        plt.plot(x, test_mean[skip_epochs: ], label='Test')
+        plt.plot(x, test_mean[skip_epochs: ], label='Train')
         plt.plot(x, val_mean[skip_epochs: ], label='Validation')
         plt.fill_between(x, test_mean[skip_epochs: ] - test_sd[skip_epochs: ], 
                          test_mean[skip_epochs: ] + test_sd[skip_epochs: ], 
@@ -333,7 +333,7 @@ def plot_cv(test, val, epochs, err=2, skip_epochs=0,
         plt.ylabel(y_lab)        
         
     else: 
-        plt.plot(x, test_mean[skip_epochs: ], label='Test')
+        plt.plot(x, test_mean[skip_epochs: ], label='Train')
         plt.plot(x, val_mean[skip_epochs: ], label='Validation')
         plt.plot(x, val_mm_mean[skip_epochs: ], label='Mean')
         plt.legend()
