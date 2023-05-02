@@ -9,13 +9,14 @@ To do
 Change input norm if dblind or mixed
 should norm by drug if dblind should norm by train set if mixed
 '''
-
+import os
+import sys
+import pickle
 import numpy as np
 import pandas as pd
-import sys
 import DRP_utils.data_preprocessing as dp_nb
 from sklearn.preprocessing import StandardScaler, LabelEncoder
-import os
+
 #get parent dir that should be codebase 
 codebase_path = os.getcwd()
 #codebase_path = '/data/home/wpw035/Codebase' #old
@@ -248,16 +249,19 @@ def create_paris_to_graphs(
     '''find dict to map durg names to graphs rep
     
     '''
-    
+    import torch 
+    import torch_geometric.data as tgd
     # graph data
-    with open(f'{home_path}{path}edges_features.pkl', 'rb') as f:
+    with open(f'{codebase_path}/downloaded_data_small/edges_features.pkl', 'rb') as f:
         edge_indices, features = pickle.load(f)
+        
     dts = pd.read_csv(smile_path, index_col=0)
     drugs_to_graphs = {}
     for d, ft, edg_inds in zip(dts.index, features, edge_indices):
         edg_inds = torch.tensor(edg_inds).t().contiguous()
         ft = torch.tensor(ft.astype(np.float32))
         drugs_to_graphs[d] = tgd.Data(x=ft, edge_index=edg_inds)
+        
     return drugs_to_graphs
 
 
@@ -288,6 +292,7 @@ class DrpInputData():
             raise Exception("add input omics types e.g. phos, prot, rna")
             
         self.omic_types = omic_types    
+        self.drug_rep = drug_rep
         self.all_omics = {}
         if target == 'gdsc1_ic50':
             self.y_df = read_targets() 
@@ -307,12 +312,17 @@ class DrpInputData():
             self.all_drugs = list(self.dths.keys())
         if drug_rep == 'mol_graph':
             self.dtg = create_paris_to_graphs()
-            self.dtg = list(self.dths.keys())
+            self.all_drugs = list(self.dtg.keys())
             
             
         #---- To Do: add other drug reps ----
         #need to remove drugs without smiels strings from all_drugs when done 
         self.marker_drugs = one_hot_encode(self.all_drugs)
+        
+    def __repr__(self):
+        ots = self.omic_types
+        dr = self.drug_rep
+        return f'DrpInputData, {ots} omics, {dr} drug representation'
         
     def remove_disjoint(self):
         '''Remove cell lines that don't overlap between datasets
@@ -325,6 +335,7 @@ class DrpInputData():
         for df in omic_dfs[1: ]:
             overlap_cls = [idx for idx in df.index if idx in overlap_cls]
             
+        self.y_df = self.y_df.loc[overlap_cls]
         if 'phos' in self.omic_types:
             self.phos = self.phos.loc[overlap_cls]
             self.all_omics['phos'] = self.phos

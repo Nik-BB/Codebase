@@ -271,3 +271,4 @@ def split_val(seed, _all_cls, _all_drugs, all_targets, train_size=0.8,
     assert len(set(test_flat).intersection(val_flat)) == 0
     
     return train_pairs, test_pairs, val_pairs
+
