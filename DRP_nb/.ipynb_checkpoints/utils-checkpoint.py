@@ -77,7 +77,8 @@ def create_all_drugs(x, xd, y):
 
 def into_dls(x: list, batch_size=512):
     '''helper func to put DRP data into dataloaders
-    x[0], x[1] and x[2] give the omics, drug and target values respectively
+    for non gnn x[0], x[1] and x[2] give the omics, drug and target values
+    respectively. for gnn x[0] gives graph data
     
     '''
     #checks 
@@ -87,13 +88,14 @@ def into_dls(x: list, batch_size=512):
     from torch.utils.data import DataLoader
     import torch_geometric.data as tgd
     
-    x[0] = DataLoader(x[0], batch_size=batch_size)
+    x[1] = DataLoader(x[1], batch_size=batch_size)
     x[2] = DataLoader(x[2], batch_size=batch_size)
     
-    if type(x[1]) == tgd.batch.DataDataBatch:
-        x[1] = DataLoaderGeo(x[1], batch_size=batch_size)
+    if type(x[0]) == tgd.batch.DataDataBatch:
+        print('Graph drug data')
+        x[0] = DataLoaderGeo(x[0], batch_size=batch_size)
     else:
-        x[1] = DataLoader(x[1], batch_size=batch_size)
+        x[0] = DataLoader(x[0], batch_size=batch_size)
         
     return x
 

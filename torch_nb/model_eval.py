@@ -3,6 +3,10 @@
 '''
 
 import numpy as np 
+import torch
+
+device = "cuda" if torch.cuda.is_available() else "cpu" 
+device
 
 def predict(dl1, dl2, model):
     '''Find regresstion predictions of a pytorch model
@@ -21,7 +25,7 @@ def predict(dl1, dl2, model):
     model.eval()
     preds = []
     with torch.no_grad():
-        for xo, xd in zip(omic_dl, drug_dl):
+        for xo, xd in zip(dl1, dl2):
             xo, xd = xo.to(device), xd.to(device)
             pred = model(xo, xd)
             pred = pred.cpu().detach().numpy()

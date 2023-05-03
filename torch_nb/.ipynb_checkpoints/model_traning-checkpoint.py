@@ -114,7 +114,7 @@ class EarlyStopping:
 def tl_multi_dls(train_dls=None, y_train=None, val_dls=None, y_val=None, 
                  model=None, loss_fn=nn.MSELoss(), optimiser=None, 
                  epochs=10, verb=1, early_stopping_dict=None):
-    '''torch train loop for two data loaders
+    '''torch train loop for mutiple data loaders
     
     ------inputs------
     train_dls: list like 
@@ -133,10 +133,11 @@ def tl_multi_dls(train_dls=None, y_train=None, val_dls=None, y_val=None,
     
     
     early_stopping_dict: dict
-    contains earily stopping param
+    contains earily stopping params, patience and delta 
+    defalt patience=10 and delta=0.0
     
     ------returns------
-    rain_hist, best_model_dict, patience=10 and delta=0.0
+    train_hist, best_model_dict
     
     if early stopping implemented best model is used to overwrite model
     this happens even when early stopping is't tirggered

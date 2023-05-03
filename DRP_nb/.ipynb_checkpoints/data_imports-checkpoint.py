@@ -17,8 +17,8 @@ import pandas as pd
 import DRP_utils.data_preprocessing as dp_nb
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 
-#get parent dir that should be codebase 
-codebase_path = os.getcwd()
+#get parent dir, codebase 
+codebase_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 #codebase_path = '/data/home/wpw035/Codebase' #old
 sys.path.insert(0, codebase_path) #add path to my codebase models
 
@@ -271,6 +271,11 @@ def create_paris_to_graphs(
 class DrpInputData():
     '''Class to load in and preprocess input data for DRP
     
+    supported omcis dtypes = ['phos', 'prot', 'rna']
+    supported drug dtypes = ['marker', 'smile', 'mol_graph']
+    
+    --------to do: make dytpes float32 ------------------------
+    
     '''
     def __init__(self, omic_types: list=[], drug_rep: str='marker', 
                  target: str='gdsc1_ic50', max_smile_len: int=188):
@@ -351,11 +356,6 @@ class DrpInputData():
         for df1 in self.all_omics.values():
             for df2 in self.all_omics.values():
                 assert (df1.index == df2.index).all()
-                
-    #should do in diff / class 
-    def tt_split(self):
-        pass
-        #can use the same tt split method for each omics df
 
 
 #-------older funcs used in previos work ----------           
