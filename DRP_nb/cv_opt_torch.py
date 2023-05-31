@@ -258,7 +258,7 @@ def run_random_hp_opt(param_grid, train_data, num_trails, model_func, epochs,
         
     return pd.DataFrame(opt_results), run_hists
         
-def plot_cv(test, val, epochs, err=2, skip_epochs=0,
+def plot_cv(train, val, epochs, err=2, skip_epochs=0,
             mm_loss = [], y_lab='Loss', 
             save_name=''):
     '''Func to plot the cross validation loss or metric
@@ -266,9 +266,9 @@ def plot_cv(test, val, epochs, err=2, skip_epochs=0,
     Inputs
     ------
     train: list, of length number of cv folds, with each element of the list
-    contaning a lists with the test set loss or metric. 
+    contaning a lists with the train set loss or metric. 
         
-    val: same as test but with validation data  
+    val: same as train but with validation data  
     
     epochs: number of epochs model traiend for
     
@@ -288,9 +288,9 @@ def plot_cv(test, val, epochs, err=2, skip_epochs=0,
     '''
     x = range(1, epochs + 1 - skip_epochs) 
     val_mean = cv_metric(val, np.mean)
-    test_mean = cv_metric(test, np.mean)
+    train_mean = cv_metric(train, np.mean)
     val_sd = cv_metric(val, np.std)
-    test_sd = cv_metric(test, np.std)
+    train_sd = cv_metric(train, np.std)
     if mm_loss:
         val_mm_mean = np.mean(mm_loss)
         val_mm_mean = np.array([val_mm_mean] * epochs)
@@ -299,14 +299,14 @@ def plot_cv(test, val, epochs, err=2, skip_epochs=0,
     
     if err == 1:
         plt.errorbar(
-            x, test_mean[skip_epochs: ], yerr= test_sd[skip_epochs: ], 
+            x, train_mean[skip_epochs: ], yerr= train_sd[skip_epochs: ], 
             label='Train')
         plt.errorbar(
             x, val_mean[skip_epochs: ],  yerr = val_sd[skip_epochs: ], 
             label='Validation')
         plt.fill_between(
-            x, test_mean[skip_epochs: ] - test_sd[skip_epochs: ], 
-            yfit + test_sd[skip_epochs: ], color='gray', alpha=0.2)
+            x, train_mean[skip_epochs: ] - train_sd[skip_epochs: ], 
+            yfit + train_sd[skip_epochs: ], color='gray', alpha=0.2)
         
         
         plt.legend()
@@ -314,10 +314,10 @@ def plot_cv(test, val, epochs, err=2, skip_epochs=0,
         plt.ylabel(y_lab)
         
     if err == 2:
-        plt.plot(x, test_mean[skip_epochs: ], label='Train')
+        plt.plot(x, train_mean[skip_epochs: ], label='Train')
         plt.plot(x, val_mean[skip_epochs: ], label='Validation')
-        plt.fill_between(x, test_mean[skip_epochs: ] - test_sd[skip_epochs: ], 
-                         test_mean[skip_epochs: ] + test_sd[skip_epochs: ], 
+        plt.fill_between(x, train_mean[skip_epochs: ] - train_sd[skip_epochs: ], 
+                         train_mean[skip_epochs: ] + train_sd[skip_epochs: ], 
                          color='gray', alpha=0.8)
         plt.fill_between(x, val_mean[skip_epochs: ] - val_sd[skip_epochs: ], 
                  val_mean[skip_epochs: ] + val_sd[skip_epochs: ], 
@@ -333,7 +333,7 @@ def plot_cv(test, val, epochs, err=2, skip_epochs=0,
         plt.ylabel(y_lab)        
         
     else: 
-        plt.plot(x, test_mean[skip_epochs: ], label='Train')
+        plt.plot(x, train_mean[skip_epochs: ], label='Train')
         plt.plot(x, val_mean[skip_epochs: ], label='Validation')
         plt.plot(x, val_mm_mean[skip_epochs: ], label='Mean')
         plt.legend()
