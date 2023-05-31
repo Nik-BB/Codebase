@@ -91,7 +91,7 @@ def into_dls(x: list, batch_size=512):
     x[1] = DataLoader(x[1], batch_size=batch_size)
     x[2] = DataLoader(x[2], batch_size=batch_size)
     
-    if type(x[0]) == tgd.batch.DataDataBatch:
+    if isinstance(x[0], tgd.Batch):
         print('Graph drug data')
         x[0] = DataLoaderGeo(x[0], batch_size=batch_size)
     else:
