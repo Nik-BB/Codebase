@@ -83,18 +83,20 @@ class EarlyStopping:
     How much the loss needs to decrease by to count as an improvement
     e.g. delta=1 means the loss needs to be at least 1 less than previous best loss
     '''
-    def __init__(self, patience=10, delta=0.0):
+    def __init__(self, patience=10, delta=0.0, verb=0):
         self.patience = patience
         self.delta = delta
         self.count = 0
         self.min_val_loss = np.inf
         self.best_model_dict = None
         self.best_epoch = None
+        self.verb = verb
         
     def earily_stop(self, val_loss, model_state, e=0):
         #if loss improves 
         if val_loss < self.min_val_loss:
-            print(f'loss improved from {self.min_val_loss} to {val_loss}')
+            if self.verb > 0:
+                print(f'loss improved from {self.min_val_loss} to {val_loss}')
             self.min_val_loss = val_loss
             self.count = 0 
             #self.best_model_dict = model_state
@@ -149,7 +151,7 @@ def tl_multi_dls(train_dls=None, y_train=None, val_dls=None, y_val=None,
     #early stopping
     if early_stopping_dict and val_dls:
         p, d = early_stopping_dict['patience'], early_stopping_dict['delta']
-        early_stopper = EarlyStopping(patience=p, delta=d)
+        early_stopper = EarlyStopping(patience=p, delta=d, verb=verb)
     
     for e in range(epochs):
         #train_dls_y = train_dls
