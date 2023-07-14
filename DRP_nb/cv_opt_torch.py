@@ -105,8 +105,9 @@ def run_cv_cblind_torch(m_func, train_data, hp, drug_cl_index, train_loop,
         train_val_cls[1].append(val_cells)
         train_i, val_i = [], []
         #find index of cell lines in val and partial train set
-        for ptc, vc in zip(p_train_cells, val_cells):
+        for ptc in p_train_cells:
             train_i.extend(np.where(cells == ptc)[0])
+        for vc in val_cells:
             val_i.extend(np.where(cells == vc)[0])
         #reshuffles inds so in orgian order and not ordered by cl    
         train_i.sort(), val_i.sort()
